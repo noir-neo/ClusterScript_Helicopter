@@ -1,0 +1,565 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &1255593263986831113
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1829750975477107280, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: sourceCode
+      value: "const Vector2Zero = new Vector2(0, 0);\nconst Vector3Zero = new Vector3(0,
+        0, 0);\nconst Vector3Forward = new Vector3(0, 0, 1);\nconst Vector3Up = new
+        Vector3(0, 1, 0);\nconst Vector3Right = new Vector3(1, 0, 0);\nconst QuaternionIdentity
+        = new Quaternion(0, 0, 0, 1);\n\n// @field(float)\nconst gravity = 0;;\n//
+        @field(float)\nconst mass = 1;;\n// @field(float)\nconst drag = 1;;\n// @field(float)\nconst
+        angularDrag = 1;;\n// @field(float)\nconst power = 1;;\n// @field(float)\nconst
+        torquePower = 1;;\n// @field(float)\nconst powerFilterFactor = 0.6;;\n\n//
+        @field(AudioClip)\nconst rotorSound = $.audio(\"rotorSound\");;\n// @field(float)\nconst
+        rotorSoundVolumeFactor = 0.5;;\n// @field(float)\nconst rotorSoundVolumeOffset
+        = 2;;\n\n// @field(string), @textArea\nconst rotorSubNodeNames = \"RotorFrontLeft\\nRotorFrontRight\\nRotorRearLeft\\nRotorRearRight\";;\n//
+        @field(float)\nconst rotorAnimationSpeedFactor = 200;;\n// @field(float)\nconst
+        rotorAnimationSpeedOffset = 500;;\n\nconst rotorSubNodes = rotorSubNodeNames.split('\\n').map((x)
+        => $.subNode(x));\n\nconst lerp = (a, b, t) => {\n  return a + (b - a) *
+        t;\n};\n\nconst calcTorque = (from, to, kp) => {\n  let q = to.clone().multiply(from.clone().invert());\n 
+        \n  if (q.w < 0)\n  {\n      q.x = -q.x;\n      q.y = -q.y;\n      q.z =
+        -q.z;\n      q.w = -q.w;\n  }\n\n  let torque = new Vector3(q.x, q.y, q.z);\n 
+        torque = torque.multiplyScalar(kp);\n  return torque;\n};\n\n$.onStart(()
+        => {\n  rotorSound.volume = rotorSoundVolumeOffset;\n  rotorSound.play();\n});\n\n$.onRide((isGetOn,
+        player) => {\n  if (isGetOn) {\n    $.setPlayerScript(player);\n    player.send(\"init_camera\",
+        $.getRotation());\n    $.state.ridingPlayer = player;\n  } else {\n    player.send(\"reset_camera\",
+        null);\n    $.state.ridingPlayer = null;\n  }\n});\n\n$.onSteer((input, player)
+        => {\n  $.state.steerInput = input;\n});\n\n$.onUpdate(deltaTime => {\n 
+        let ridingPlayer = $.state.ridingPlayer ?? null;\n  let isRiding = ridingPlayer
+        !== null && ridingPlayer.exists();\n\n  let steerInput = $.state.steerInput
+        ?? Vector2Zero;\n\n  let force = Vector3Zero;\n  let torque = Vector3Zero;\n\n 
+        if (isRiding) {\n    let currentRot = $.getRotation();\n    let cameraRot
+        = $.state.cameraRotation ?? currentRot;\n    let currentForce = $.state.force
+        ?? Vector3Zero;\n\n    let targetForce = Vector3Up.clone()\n      .multiplyScalar(steerInput.y
+        * power * mass - gravity * mass)\n      .applyQuaternion(currentRot);\n\n   
+        force = currentForce.clone().lerp(targetForce, deltaTime * powerFilterFactor);\n   
+        torque = calcTorque(currentRot, cameraRot, torquePower * mass);\n  }\n\n 
+        $.state.force = force;\n  $.state.torque = torque;\n\n  rotorSound.volume
+        = steerInput.y * rotorSoundVolumeFactor + rotorSoundVolumeOffset;\n\n  let
+        rotorSpeed = steerInput.y * rotorAnimationSpeedFactor + rotorAnimationSpeedOffset;\n 
+        for (let i = 0; i < rotorSubNodes.length; i++) {\n    let rotor = rotorSubNodes[i];\n   
+        rotor.setRotation(rotor.getRotation().multiply(new Quaternion().setFromAxisAngle(Vector3Up,
+        rotorSpeed * deltaTime)));\n  }\n});\n\n$.onPhysicsUpdate(_ => {\n  let force
+        = $.state.force ?? Vector3Zero;\n  let torque = $.state.torque ?? Vector3Zero;\n\n 
+        let velocity = $.velocity;\n  let angularVelocity = $.angularVelocity;\n 
+        let dragForce = velocity.clone().normalize().multiplyScalar(-velocity.lengthSq()
+        * drag);\n  let dragTorque = angularVelocity.clone().normalize().multiplyScalar(-angularVelocity.lengthSq()
+        * angularDrag);\n\n  $.addForce(force.add(dragForce));\n  $.addTorque(torque.add(dragTorque));\n});\n\n$.onReceive((messageType,
+        arg, sender) => {\n  if ($.state.ridingPlayer == null || sender.id !== $.state.ridingPlayer.id)
+        {\n    return;\n  }\n  switch (messageType) {\n    case \"update_camera_rotation\":\n     
+        $.state.cameraRotation = arg;\n      break;\n  }\n}, { player: true });\n"
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107280, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: sourceCodeAsset
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107292, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_Name
+      value: Helicopter_CSExtensions
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1829750975477107295, guid: 264e94df266d142888b6d7a51d9f173f,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 3656511027014441018, guid: 264e94df266d142888b6d7a51d9f173f, type: 3}
+  m_SourcePrefab: {fileID: 100100000, guid: 264e94df266d142888b6d7a51d9f173f, type: 3}
+--- !u!1 &578809010823767381 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1829750975477107292, guid: 264e94df266d142888b6d7a51d9f173f,
+    type: 3}
+  m_PrefabInstance: {fileID: 1255593263986831113}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2268966168647962427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578809010823767381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d598b4b653f4fba944e3077caab98f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemAudioSets:
+  - id: rotorSound
+    audioClip: {fileID: 8300000, guid: 3a0384626c2ccdc4596cf55e0b54dfaa, type: 3}
+    loop: 1
+--- !u!114 &5933996935363891273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 578809010823767381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b823bd601c25d6643a680126a20d89c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  templateCode: {fileID: 5022602860645237092, guid: 7f6552f20ba9e4656985d1db50644b2a,
+    type: 3}
+  extensionFields:
+  - fieldName: gravity
+    type: 2
+    fieldDefinedLocation:
+      startLine: 9
+      startColumn: 6
+      endLine: 9
+      endColumn: 21
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 0
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: mass
+    type: 2
+    fieldDefinedLocation:
+      startLine: 11
+      startColumn: 6
+      endLine: 11
+      endColumn: 14
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 1
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 1
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: drag
+    type: 2
+    fieldDefinedLocation:
+      startLine: 13
+      startColumn: 6
+      endLine: 13
+      endColumn: 14
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 1
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 1
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: angularDrag
+    type: 2
+    fieldDefinedLocation:
+      startLine: 15
+      startColumn: 6
+      endLine: 15
+      endColumn: 21
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 1
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 1
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: power
+    type: 2
+    fieldDefinedLocation:
+      startLine: 17
+      startColumn: 6
+      endLine: 17
+      endColumn: 15
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 1
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 1
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: torquePower
+    type: 2
+    fieldDefinedLocation:
+      startLine: 19
+      startColumn: 6
+      endLine: 19
+      endColumn: 21
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 1
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 1
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: powerFilterFactor
+    type: 2
+    fieldDefinedLocation:
+      startLine: 21
+      startColumn: 6
+      endLine: 21
+      endColumn: 29
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 0.6
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 0.6
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorSound
+    type: 1001
+    fieldDefinedLocation:
+      startLine: 24
+      startColumn: 6
+      endLine: 24
+      endColumn: 35
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 0
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 1
+    intValue: 0
+    floatValue: 0
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 8300000, guid: 3a0384626c2ccdc4596cf55e0b54dfaa, type: 3}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorSoundVolumeFactor
+    type: 2
+    fieldDefinedLocation:
+      startLine: 26
+      startColumn: 6
+      endLine: 26
+      endColumn: 34
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 0.5
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 0.5
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorSoundVolumeOffset
+    type: 2
+    fieldDefinedLocation:
+      startLine: 28
+      startColumn: 6
+      endLine: 28
+      endColumn: 32
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 2
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 2
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorSubNodeNames
+    type: 3
+    fieldDefinedLocation:
+      startLine: 31
+      startColumn: 6
+      endLine: 31
+      endColumn: 90
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 1
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 0
+    stringInitialValue: 'RotorFrontLeft
+
+      RotorFrontRight
+
+      RotorRearLeft
+
+      RotorRearRight'
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 0
+    stringValue: 'RotorFrontLeft
+
+      RotorFrontRight
+
+      RotorRearLeft
+
+      RotorRearRight'
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorAnimationSpeedFactor
+    type: 2
+    fieldDefinedLocation:
+      startLine: 33
+      startColumn: 6
+      endLine: 33
+      endColumn: 37
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 200
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 200
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
+  - fieldName: rotorAnimationSpeedOffset
+    type: 2
+    fieldDefinedLocation:
+      startLine: 35
+      startColumn: 6
+      endLine: 35
+      endColumn: 37
+    hasRange: 0
+    rangeMin: 0
+    rangeMax: 0
+    useTextArea: 0
+    boolInitialValue: 0
+    intInitialValue: 0
+    floatInitialValue: 500
+    stringInitialValue: 
+    vector2InitialValue: {x: 0, y: 0}
+    vector3InitialValue: {x: 0, y: 0, z: 0}
+    quaternionInitialValue: {x: 0, y: 0, z: 0, w: 1}
+    overrideValue: 0
+    boolValue: 0
+    intValue: 0
+    floatValue: 500
+    stringValue: 
+    vector2Value: {x: 0, y: 0}
+    vector3Value: {x: 0, y: 0, z: 0}
+    quaternionValue: {x: 0, y: 0, z: 0, w: 1}
+    audioClipValue: {fileID: 0}
+    humanoidAnimationClipValue: {fileID: 0}
+    itemReferenceValue: {fileID: 0}
+    materialValue: {fileID: 0}
