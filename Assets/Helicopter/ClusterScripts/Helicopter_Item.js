@@ -6,16 +6,22 @@ const Vector3Right = new Vector3(1, 0, 0);
 const QuaternionIdentity = new Quaternion(0, 0, 0, 1);
 const gravity = -9.81;
 
+// 質量 (Rigidbody の Mass と同じ値にする)
 // @field(float)
 const mass = 1;
+// 抗力
 // @field(float)
 const drag = 1;
+// 角抗力
 // @field(float)
 const angularDrag = 1;
+// 上昇力
 // @field(float)
 const power = 1;
+// トルク
 // @field(float)
 const torquePower = 1;
+// 上昇力が入力に追従するフィルタ係数
 // @field(float)
 const powerFilterFactor = 0.6;
 
