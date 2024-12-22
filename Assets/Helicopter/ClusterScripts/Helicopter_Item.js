@@ -4,9 +4,8 @@ const Vector3Forward = new Vector3(0, 0, 1);
 const Vector3Up = new Vector3(0, 1, 0);
 const Vector3Right = new Vector3(1, 0, 0);
 const QuaternionIdentity = new Quaternion(0, 0, 0, 1);
-
-// @field(float)
 const gravity = -9.81;
+
 // @field(float)
 const mass = 1;
 // @field(float)
